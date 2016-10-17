@@ -14,20 +14,20 @@
 ; The 2600 uses a 6507, which is basically a 6502, with fewer address lines and
 ; interrupts disabled
 ;
-	PROCESSOR 6502
+    PROCESSOR 6502
 
 ;
 ; Now include all the Atari support stuff
 ;
-	INCLUDE "vcs.h"
-	INCLUDE "macro.h"
+    INCLUDE "vcs.h"
+    INCLUDE "macro.h"
 
 ;
 ; The ORG directive tells the assembler where in memory to place
 ; all the code that follows.
 ; $F000 is the preferred address for Atari programs
 ;
-	ORG $F000
+    ORG $F000
 
 ;
 ; Start of program code
@@ -38,33 +38,33 @@ Start
 ; When the Atari starts up, all its memory is uninitialized. 
 ; Do the following to tidy everything up
 ;
-	SEI				; Disable interrupts
-	CLD  	 		; Clear BCD math bit.
-	LDX #$FF 		; set X to the top of the memory we have,
-	TXS	 			; ...and set the stack pointer to what X is...i.e. #$FF aka 255
-	
+    SEI             ; Disable interrupts
+    CLD             ; Clear BCD math bit.
+    LDX #$FF        ; set X to the top of the memory we have,
+    TXS             ; ...and set the stack pointer to what X is...i.e. #$FF aka 255
+    
 ;
 ; Walk through our memory and zero it all out
 ;
-	LDA #0			; Put Zero into A (X is at $FF)
+    LDA #0          ; Put Zero into A (X is at $FF)
 ClearMem
-	STA 0,X			; Store accumulator into location X (offset by 0)
-	DEX				; Decrement X
-	BNE ClearMem	; If the last command resulted in something
-					; non-zero, branch to "ClearMem"
+    STA 0,X         ; Store accumulator into location X (offset by 0)
+    DEX             ; Decrement X
+    BNE ClearMem    ; If the last command resulted in something
+                    ; non-zero, branch to "ClearMem"
 
 ; --- End of initialization
 
 
 ; Game setup
-	LDA #$00		; $00 = black
-	STA COLUBK		; Store color into background color register
+    LDA #$00        ; $00 = black
+    STA COLUBK      ; Store color into background color register
 
-	LDA #$45
-	STA COLUP0		; P1/P1 missile color
+    LDA #$45
+    STA COLUP0      ; P1/P1 missile color
 
-	LDA #%00000010	; First time through, blank the screen. Once we are in the main loop
-	STA VBLANK		; this will be done in our overscan section
+    LDA #%00000010  ; First time through, blank the screen. Once we are in the main loop
+    STA VBLANK      ; this will be done in our overscan section
 
 ; -----------------------------------------------------------------------------
 
@@ -74,10 +74,10 @@ ClearMem
 ;
 ; We have four distinct sections:
 ;   Vertical Sync - starts up new frame
-;	Vertical Blank - 37 scanlines during we which we can do game logic
-;	Horizontal Blank/Scanline drawing (we have some hblank time for game code here,
-;										but it's mainly for rendering)
-;	Overscan - 30 scanlines for game logic
+;   Vertical Blank - 37 scanlines during we which we can do game logic
+;   Horizontal Blank/Scanline drawing (we have some hblank time for game code here,
+;                                       but it's mainly for rendering)
+;   Overscan - 30 scanlines for game logic
 ;
 
 MainLoop
@@ -89,14 +89,14 @@ MainLoop
 ; According to SPG, bit D1 of VSYNC needs to be set to 1 for at least two scanlines
 ; and then set back to 0 to trigger a new frame
 ;
-	LDA #%00000010
-	STA VSYNC
+    LDA #%00000010
+    STA VSYNC
 
-	STA WSYNC	; Hold it for two scanlines...we could do something in this period
-	STA WSYNC	; but for now just hold.
+    STA WSYNC   ; Hold it for two scanlines...we could do something in this period
+    STA WSYNC   ; but for now just hold.
 
-	LDA #%00000000
-	STA VSYNC	; Turn off VSYNC
+    LDA #%00000000
+    STA VSYNC   ; Turn off VSYNC
 
 ; -----------------------------------------------------------------------------
 
@@ -121,8 +121,8 @@ MainLoop
 ; The timer we are going to use is TIM64T, which performs one tick every 64 cycles. 
 ; Therefore we require (2800 / 64) = 43.75 ticks (but we round down to 43)
 ;
-	LDA #43		; Load "43" into the accumulator
-	STA TIM64T	; Store the accumulated value in the TIM64T register
+    LDA #43     ; Load "43" into the accumulator
+    STA TIM64T  ; Store the accumulated value in the TIM64T register
 
 ;
 ; This is now the area in which we can execute our code, provided it doesn't take any 
@@ -130,7 +130,7 @@ MainLoop
 ;
 
 ;
-; 		-- DO STUFF HERE --
+;       -- DO STUFF HERE --
 ;
 
 ;
@@ -138,16 +138,16 @@ MainLoop
 ; to end
 ;
 VBlankLoop
-	LDA INTIM			; Load timer value into accumulator
-	BNE VBlankLoop		; Loop back if the timer value is not zero
-	
-	; Timer has expired but there's a good chance we'll be some way through a scanline
-	; here, so sit tight until we get to the end and then turn off the VBLANK
-	STA WSYNC
-	STA VBLANK			; End VBLANK period with the zero we have in the accumulator
-	
+    LDA INTIM           ; Load timer value into accumulator
+    BNE VBlankLoop      ; Loop back if the timer value is not zero
+    
+    ; Timer has expired but there's a good chance we'll be some way through a scanline
+    ; here, so sit tight until we get to the end and then turn off the VBLANK
+    STA WSYNC
+    STA VBLANK          ; End VBLANK period with the zero we have in the accumulator
+    
 ; -----------------------------------------------------------------------------
-	
+    
 
 ;
 ; Horizontal Blank/Scanline draw
@@ -155,30 +155,30 @@ VBlankLoop
 ;
 ; Here we are going to manually count down each scanline. The Y register will hold
 ; the current scanline value
-;	
+;   
 
-	LDY #192		; Using Y register as scanline counter and counting off 192 scanlines
-	
-	LDA #2			; Storing a 2 in ENAM0 (i.e. bit D1) will enable Missile 0
-	STA ENAM0
+    LDY #192        ; Using Y register as scanline counter and counting off 192 scanlines
+    
+    LDA #2          ; Storing a 2 in ENAM0 (i.e. bit D1) will enable Missile 0
+    STA ENAM0
 
-	LDA #$F0
-	STA HMM0		; stick that in the missile mover
+    LDA #$F0
+    STA HMM0        ; stick that in the missile mover
 
 
 
 ScanLoop
-	; After 68 clock cycles in this loop the TIA will begin drawing the scanline
+    ; After 68 clock cycles in this loop the TIA will begin drawing the scanline
 
-	;
-	; 		-- DO SCANLINE STUFF HERE --
-	; 
+    ;
+    ;       -- DO SCANLINE STUFF HERE --
+    ; 
 
-	DEY				; Decrement the scanline counter
-	STA WSYNC 		; Wait for the line to finish
-	BNE ScanLoop	; Loop if there are remaining scanlines
+    DEY             ; Decrement the scanline counter
+    STA WSYNC       ; Wait for the line to finish
+    BNE ScanLoop    ; Loop if there are remaining scanlines
 
-	STA HMOVE
+    STA HMOVE
 
 ; -----------------------------------------------------------------------------
 
@@ -197,12 +197,12 @@ ScanLoop
 ; (2263 / 64) = 35.359
 ; ~35 timer ticks 
 ;
-	LDA #2			; Write "2" for the VBLANK
-	STA VBLANK 		; Make TIA output invisible for the overscan,
-					; (and keep it that way for the vsync and vblank)
+    LDA #2          ; Write "2" for the VBLANK
+    STA VBLANK      ; Make TIA output invisible for the overscan,
+                    ; (and keep it that way for the vsync and vblank)
 
-	LDA #35			; Load "35" into the accumulator
-	STA TIM64T		; Store the accumulated value in the TIM64T register
+    LDA #35         ; Load "35" into the accumulator
+    STA TIM64T      ; Store the accumulated value in the TIM64T register
 
 
 ;
@@ -211,7 +211,7 @@ ScanLoop
 ;
 
 ;
-; 		-- DO STUFF HERE --
+;       -- DO STUFF HERE --
 ;
 
 ;
@@ -219,12 +219,12 @@ ScanLoop
 ; to end
 ;
 OverscanLoop
-	LDA INTIM			; Load timer value into accumulator
-	BNE OverscanLoop	; Loop back if the timer value is not zero
+    LDA INTIM           ; Load timer value into accumulator
+    BNE OverscanLoop    ; Loop back if the timer value is not zero
 
-	STA WSYNC			; Again, we're probably in the middle of a scanline here. Wait
-						; for it to complete
-	JMP MainLoop		; END OF FRAME - jump back to main game loop
+    STA WSYNC           ; Again, we're probably in the middle of a scanline here. Wait
+                        ; for it to complete
+    JMP MainLoop        ; END OF FRAME - jump back to main game loop
 
 ; -----------------------------------------------------------------------------
 
@@ -240,6 +240,6 @@ OverscanLoop
 ;
 ; This is repeated for $FFFE/$FFFF, which is for a special event called a BRK
 ;
-	ORG $FFFC
-	.word Start
-	.word Start
+    ORG $FFFC
+    .word Start
+    .word Start
